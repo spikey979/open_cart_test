@@ -1,0 +1,22 @@
+# Predložak za zaključavanje stranice HTTP Basic Authom.
+#
+# 1. Generiraj htpasswd redak (bcrypt):
+#      htpasswd -nbB korisnik 'lozinka'
+#    -> ispis npr: korisnik:$2y$05$6.elPUzyuBD1tPUY/AGgLOVVstwC5D2dxgJjv1BqXL8A0g2taW23S
+#
+# 2. Udvostruči SVAKI "$" znak (Traefik/Compose label sintaksa):
+#      korisnik:$$2y$$05$$6.elPUzyuBD1tPUY/AGgLOVVstwC5D2dxgJjv1BqXL8A0g2taW23S
+#
+# 3. Kopiraj ovu datoteku u docker-compose.override.yml, zalijepi hash
+#    ispod umjesto "korisnik:$$..." i pokreni:
+#      docker compose -f docker-compose.prod.yml -f docker-compose.override.yml up -d
+#
+# NAPOMENA: hash NE stavljati u .env — Compose duplo interpolira "$"
+# znakove iz env varijabli unutar labela pa se hash pokvari. Mora biti
+# doslovno upisan u YAML labelu (kao ovdje), tada radi ispravno.
+
+services:
+  opencart:
+    labels:
+      - "traefik.http.middlewares.oc-auth.basicauth.users=korisnik:$$2y$$05$$6.elPUzyuBD1tPUY/AGgLOVVstwC5D2dxgJjv1BqXL8A0g2taW23S"
+      - "traefik.http.routers.oc-secured.middlewares=oc-auth,oc-noindex"

@@ -63,8 +63,10 @@ services:
       - "traefik.http.routers.oc-secured.entrypoints=web-secure"
       - "traefik.http.routers.oc-secured.tls=true"
       - "traefik.http.routers.oc-secured.tls.certresolver=myhttpchallenge"
-      # Basic auth (cijela domena) + noindex header, da stranica ne bude
-      # javno dostupna niti indeksirana dok traje testiranje.
-      - "traefik.http.middlewares.oc-auth.basicauth.users=${OC_BASICAUTH_USERS}"
+      # noindex header, da stranica ne bude indeksirana dok traje testiranje.
       - "traefik.http.middlewares.oc-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow, noarchive"
-      - "traefik.http.routers.oc-secured.middlewares=oc-auth,oc-noindex"
+      - "traefik.http.routers.oc-secured.middlewares=oc-noindex"
+      # Basic auth se NE stavlja ovdje preko .env (Compose duplo interpolira
+      # "$" znakove iz env varijabli u labelima i pokvari htpasswd hash).
+      # Umjesto toga kopiraj docker-compose.basicauth.example.yml u
+      # docker-compose.override.yml i tamo upiši stvarni hash — vidi README.

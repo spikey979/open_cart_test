@@ -55,18 +55,18 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ### Zaključavanje stranice (Basic Auth + noindex)
 
-Cijela domena (storefront + admin) je u produkciji zaštićena HTTP Basic Authom preko Traefika, tako da stranica nije javno dostupna niti indeksirana od strane tražilica dok traje testiranje. Korisničko ime/lozinka postavljaju se preko `.env` varijable `OC_BASICAUTH_USERS` u htpasswd (apr1) formatu:
+U produkciji shop uvijek šalje `X-Robots-Tag: noindex` (tražilice ga neće indeksirati). Za potpuno zaključavanje (cijela domena, storefront + admin, dostupna samo uz lozinku) koristi `docker-compose.basicauth.example.yml`:
+
+1. Generiraj htpasswd hash: `htpasswd -nbB korisnik 'lozinka'`
+2. Udvostruči svaki `$` znak u ispisu (npr. `korisnik:$2y$05$...` → `korisnik:$$2y$$05$$...`)
+3. Kopiraj `docker-compose.basicauth.example.yml` u `docker-compose.override.yml` (nije u gitu, ostaje samo na serveru) i zalijepi hash tamo
+4. Pokreni:
 
 ```bash
-# generiraj hash lozinke
-echo $(htpasswd -nB korisnik) | sed -e s/\\$/\\$\\$/g
+docker compose -f docker-compose.prod.yml -f docker-compose.override.yml up -d
 ```
 
-Rezultat (npr. `korisnik:$$2y$$05$$...`) se upiše u `.env` kao `OC_BASICAUTH_USERS=korisnik:$$2y$$05$$...`, a zatim:
-
-```bash
-docker compose -f docker-compose.prod.yml up -d
-```
+Hash se namjerno NE stavlja preko `.env` varijable — Compose duplo interpolira `$` znakove iz env varijabli unutar labela pa se hash pokvari (isprobano, ne radi). Mora biti doslovno upisan u YAML labelu, kao u override datoteci.
 
 ## Napomena
 

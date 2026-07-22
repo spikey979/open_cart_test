@@ -43,6 +43,16 @@ docker compose down        # zaustavi, zadrži podatke
 docker compose down -v      # zaustavi i obriši sve podatke (svježa instalacija idući put)
 ```
 
+## Produkcijsko pokretanje (iza Traefika)
+
+Za pokretanje na serveru koji ima Traefik reverse proxy (Docker mreža `traefik`), koristi `docker-compose.prod.yml`. Ovaj oblik ne objavljuje portove izravno na hostu, nego shop veže na domenu preko Traefik labela i automatski ishoduje Let's Encrypt certifikat.
+
+Potrebno je u `.env` postaviti dodatnu varijablu `OC_DOMAIN` (npr. `oc.epicea.hr`), te po želji jače lozinke:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
 ## Napomena
 
-Ovo je demo/development postavka (root/admin lozinke su iz `.env` u plain textu) — nije namijenjena za produkciju.
+Ovo je demo/development postavka (root/admin lozinke su iz `.env` u plain textu) — nije namijenjena za produkciju bez dodatnog hardeninga (jače lozinke, zaključavanje admin panela, itd.).

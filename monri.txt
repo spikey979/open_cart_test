@@ -1,0 +1,107 @@
+Istraživanje: Monri (monri.hr) kartično plaćanje i OpenCart
+=============================================================
+Datum: 2026-07-22
+
+
+PODRŽAVA LI MONRI OPENCART?
+----------------------------
+
+Da, načelno DA, ali s bitnom ogradom oko verzije.
+
+- Monri (monri.hr) na stranici s integracijama (monri.hr/integracije-online/)
+  navodi OpenCart kao jednu od "plug & play" platformi (OpenCart logo je u
+  karuselu podržanih shopova).
+
+- MEĐUTIM, službeni GitHub Monrija (github.com/MonriPayments) ima gotove,
+  aktivno održavane pluginove SAMO za:
+    - WooCommerce (woocommerce-monri)
+    - Magento 2 (magento2-plugin)
+    - PrestaShop (prestashop)
+  OpenCart repo tamo NE postoji.
+
+- Monri je početkom 2023. spojen s hrvatskim WSPay-em (Integrirani poslovni
+  sistemi / Remaris, Gastrobit Grc Grupa i WebStudio/WSPay su objedinjeni
+  pod imenom Monri Payments). Danas je to ISTA tvrtka, posluje i pod
+  "Monri WSPay" brendom (wspay.info, wspay.hr, wspay.rs, wspay.ba...).
+
+- WSPay je povijesno imao OpenCart module na službenom OpenCart
+  marketplaceu, ali ih je razvijala TREĆA STRANA (agencije), ne sam WSPay/
+  Monri:
+    - "WSPay Payment Integration for OpenCart 1.4.x.x & 1.5.x.x" (iligsoft d.o.o.)
+    - "WSPay Payment Integration for 2.x.x.x" (Gigo, extension_id=24379)
+    - "OpenCart - WSPay payment gateway - OC 3.0.x.x" (agmedia, extension_id=33867)
+    - "OpenCart WSPay v3.x" (faca5, extension_id=39294)
+  Svi pronađeni moduli pokrivaju samo OpenCart 1.4-3.0.x. Nije pronađen
+  nijedan potvrđen modul za OpenCart 4.x (naš demo je na OpenCart 4.1.0.3).
+
+ZAKLJUČAK: gotov, službeno održavan Monri/WSPay modul za OpenCart 4 vjerojatno
+NE postoji javno. Realne opcije:
+
+  1. Pitati Monri direktno (support@monri.com ili ured@monri.com,
+     +385 1 4440 064) imaju li interno OC4-kompatibilan modul koji ne
+     dijele javno na webu/GitHubu.
+
+  2. Custom integracija — Monri ima dobro dokumentiran REST/XML API
+     (WebPay Form, WebPay Direct, Payment API, Transaction API), pa bi se
+     mogao napraviti vlastiti OpenCart 4 payment extension po uzoru na
+     njihove postojeće WooCommerce/Magento pluginove. Dodatan razvojni
+     posao, ali izvediv.
+
+
+TEST (SANDBOX) SUČELJE
+-----------------------
+
+Da, postoji potpuno odvojen test okoliš.
+
+- Test endpoint:  https://ipgtest.monri.com
+- Produkcija:      https://ipg.monri.com
+
+- Za pristup treba zatražiti TESTNI MERCHANT RAČUN mailom na
+  support@monri.com — nakon toga Monri otvori račun i pošalje pristupne
+  podatke za login na https://ipgtest.monri.com/en/login
+
+- Test brojevi kartica (broj kartice, datum isteka, CVV, 3D Secure OTP)
+  se NE objavljuju javno u dokumentaciji — dobivaju se tek uz testni
+  račun (standardna praksa protiv zlouporabe test okoline).
+
+- Ključni endpointi test okoline:
+    - Slanje forme za plaćanje:  https://ipgtest.monri.com/v2/form
+    - Capture/refund/void:       https://ipgtest.monri.com/transactions/:order_number/[capture|refund|void].xml
+    - Demo integracija:          https://ipgtest.monri.com/services-demo/integration/redirect-create-payment
+
+- Potrebni parametri za integraciju (WebPay Form / v2 Form):
+    - Podaci o kupcu: ime i prezime, adresa, grad, poštanski broj, država,
+      telefon, e-mail
+    - Podaci o narudžbi: broj narudžbe, opis, iznos (u najmanjim
+      jedinicama valute), valuta (USD, EUR, BAM, HRK)
+    - Autentikacija: authenticity token (identifikator trgovca) i digest
+      (SHA512 hash od: ključ + broj narudžbe + iznos + valuta)
+    - Opcionalno: jezik, tip transakcije (authorize/purchase/capture/
+      refund/void), broj rata
+
+- Tijek integracije: prikupiš podatke o kupcu i narudžbi na svojoj
+  stranici -> izračunaš digest svojim merchant ključem -> POST na WebPay
+  form endpoint -> kupac plaća na Monrijevoj hostanoj formi -> redirect
+  natrag na success URL s rezultatom transakcije -> provjeriš vraćeni
+  digest radi sigurnosti.
+
+
+PREPORUKA
+---------
+
+Prije bilo kakvog razvoja, javiti se Monriju s konkretnim pitanjem "imate
+li gotov modul za OpenCart 4.x, i možemo li dobiti test/sandbox pristup"
+- moguće je da imaju nešto što nije javno vidljivo na webu ili GitHubu.
+Ako nemaju, custom integracija preko WebPay Form API-ja je sljedeći korak.
+
+
+IZVORI
+------
+- https://monri.hr/integracije-online/
+- https://github.com/MonriPayments
+- https://ipgtest.monri.com/en/documentation/v2_form
+- https://ipg.monri.com/en/documentation/direct
+- https://monri.hr/dvije-godine-spajanja-2025/
+- https://www.opencart.com/index.php?route=marketplace/extension/info&extension_id=24379&filter_member=Gigo
+- https://www.opencart.com/index.php?route=marketplace/extension/info&extension_id=33867&filter_member=agmedia
+- https://www.wspay.info/cd/13/komponente-za-wspay

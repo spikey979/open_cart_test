@@ -63,3 +63,8 @@ services:
       - "traefik.http.routers.oc-secured.entrypoints=web-secure"
       - "traefik.http.routers.oc-secured.tls=true"
       - "traefik.http.routers.oc-secured.tls.certresolver=myhttpchallenge"
+      # Basic auth (cijela domena) + noindex header, da stranica ne bude
+      # javno dostupna niti indeksirana dok traje testiranje.
+      - "traefik.http.middlewares.oc-auth.basicauth.users=${OC_BASICAUTH_USERS}"
+      - "traefik.http.middlewares.oc-noindex.headers.customresponseheaders.X-Robots-Tag=noindex, nofollow, noarchive"
+      - "traefik.http.routers.oc-secured.middlewares=oc-auth,oc-noindex"

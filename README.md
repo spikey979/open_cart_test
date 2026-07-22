@@ -53,6 +53,21 @@ Potrebno je u `.env` postaviti dodatnu varijablu `OC_DOMAIN` (npr. `oc.epicea.hr
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
+### Zaključavanje stranice (Basic Auth + noindex)
+
+Cijela domena (storefront + admin) je u produkciji zaštićena HTTP Basic Authom preko Traefika, tako da stranica nije javno dostupna niti indeksirana od strane tražilica dok traje testiranje. Korisničko ime/lozinka postavljaju se preko `.env` varijable `OC_BASICAUTH_USERS` u htpasswd (apr1) formatu:
+
+```bash
+# generiraj hash lozinke
+echo $(htpasswd -nB korisnik) | sed -e s/\\$/\\$\\$/g
+```
+
+Rezultat (npr. `korisnik:$$2y$$05$$...`) se upiše u `.env` kao `OC_BASICAUTH_USERS=korisnik:$$2y$$05$$...`, a zatim:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
 ## Napomena
 
 Ovo je demo/development postavka (root/admin lozinke su iz `.env` u plain textu) — nije namijenjena za produkciju bez dodatnog hardeninga (jače lozinke, zaključavanje admin panela, itd.).

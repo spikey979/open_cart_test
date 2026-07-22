@@ -1,0 +1,53 @@
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-opencart_root}
+      MARIADB_DATABASE: ${DB_NAME:-opencart}
+      MARIADB_USER: ${DB_USER:-opencart}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-opencart}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 20s
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  opencart:
+    build:
+      context: ./docker/opencart
+      args:
+        OPENCART_VERSION: ${OPENCART_VERSION:-4.1.0.3}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    environment:
+      DB_HOSTNAME: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_NAME:-opencart}
+      DB_USERNAME: ${DB_USER:-opencart}
+      DB_PASSWORD: ${DB_PASSWORD:-opencart}
+      OC_ADMIN_USERNAME: ${OC_ADMIN_USER:-admin}
+      OC_ADMIN_PASSWORD: ${OC_ADMIN_PASSWORD:-admin123}
+      OC_ADMIN_EMAIL: ${OC_ADMIN_EMAIL:-admin@example.com}
+      HTTP_SERVER: http://localhost:${HTTP_PORT:-8080}/
+    volumes:
+      - opencart_data:/var/www/html
+
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+
+volumes:
+  db_data:
+  opencart_data:
